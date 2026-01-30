@@ -15,6 +15,8 @@ use App\Models\TicketItem;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
+use App\Models\ClientAssignment;
+use App\Models\User;
 
 class ReceptionistController extends Controller
 {
@@ -250,6 +252,146 @@ class ReceptionistController extends Controller
         });
 
         return redirect()->route('dashboard')->with('success', 'Shift finalized and submitted for review.');
+    }
+
+    public function reopen(Request $request, ShiftReport $report)
+    {
+        if ($report->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if ($report->status !== 'rejected') {
+            return redirect()->back()->with('error', 'Only rejected reports can be reopened.');
+        }
+
+        DB::transaction(function () use ($report) {
+            AttendanceLog::where('shift_report_id', $report->id)
+                ->update([
+                    'status' => 'draft',
+                    'shift_report_id' => null
+                ]);
+
+            $report->delete();
+        });
+
+        return redirect()->route('receptionist.summary')
+            ->with('success', 'Report reopened. Logs are back in your summary for editing.')
+            ->with('rejection_reason', $report->rejection_reason);
+    }
+
+    public function destroyLog(Request $request, AttendanceLog $log)
+    {
+        if ($log->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if ($log->status !== 'draft') {
+            return redirect()->back()->with('error', 'Cannot delete submitted logs.');
+        }
+
+        // Revert ticket usage if applicable
+        if ($log->payment_method === 'Ticket' && $log->ticket_item_id) {
+            $item = TicketItem::find($log->ticket_item_id);
+            if ($item) {
+                $item->update(['is_used' => false]);
+                Ticket::where('id', $item->ticket_id)->update(['status' => 'paid']); // Revert to paid/active
+            }
+        }
+
+        $log->delete();
+
+        return redirect()->back()->with('success', 'Entry deleted.');
+    }
+
+    public function assignments()
+    {
+        $assignments = ClientAssignment::whereDate('appointment_time', today())
+            ->with(['client', 'therapist', 'service'])
+            ->orderBy('appointment_time')
+            ->get();
+
+        return view('receptionist.assignments', compact('assignments'));
+    }
+
+    public function showAssign()
+    {
+        $therapists = User::where('role', 'therapist')->where('status', 'active')->get();
+        $services = Service::where('status', 'active')->get();
+
+        return view('receptionist.assign', compact('therapists', 'services'));
+    }
+
+    public function storeAssignment(Request $request)
+    {
+        $validated = $request->validate([
+            'client_name' => 'required|string|max:255',
+            'therapist_id' => 'required|exists:users,id',
+            'service_id' => 'required|exists:services,id',
+            'appointment_time' => 'required|date_format:H:i',
+        ]);
+
+        // Combine today's date with the time
+        $appointmentTime = now()->format('Y-m-d') . ' ' . $validated['appointment_time'];
+
+        ClientAssignment::create([
+            'client_name' => $validated['client_name'],
+            'therapist_id' => $validated['therapist_id'],
+            'service_id' => $validated['service_id'],
+            'appointment_time' => $appointmentTime,
+            'status' => 'pending',
+            'notes' => $request->notes,
+        ]);
+
+        return redirect()->route('receptionist.assignments')->with('success', 'Client assigned successfully.');
+    }
+
+    public function editLog(AttendanceLog $log)
+    {
+        if ($log->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if ($log->status !== 'draft') {
+            return redirect()->back()->with('error', 'Cannot edit submitted logs.');
+        }
+
+        $activeAssignment = $this->getEffectiveAssignment();
+        $isGym = $activeAssignment && str_contains(strtolower($activeAssignment->station->name), 'gym');
+        $gymService = $isGym ? Service::where('name', 'like', '%Gym%')->first() : null;
+
+        return view('receptionist.edit-log', [
+            'log' => $log,
+            'services' => Service::where('status', 'active')->get(),
+            'activeAssignment' => $activeAssignment,
+            'isGym' => $isGym,
+            'gymService' => $gymService
+        ]);
+    }
+
+    public function updateLog(Request $request, AttendanceLog $log)
+    {
+        if ($log->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if ($log->status !== 'draft') {
+            return redirect()->back()->with('error', 'Cannot edit submitted logs.');
+        }
+
+        $validated = $request->validate([
+            'service_id' => 'required|exists:services,id',
+            'user_count' => 'required|integer|min:1|max:100',
+            'payment_method' => 'required|in:Cash,Mobile,Signature,Ticket,Subscription',
+            'amount' => 'required_if:payment_method,Cash,Mobile|nullable|numeric|min:0',
+        ]);
+
+        // Recalculate amounts
+        $validated['unit_price'] = $request->amount ?? 0;
+        $validated['amount'] = $validated['unit_price'] * $validated['user_count'];
+
+        $log->update($validated);
+
+        return redirect()->route('receptionist.summary')->with('success', 'Entry updated successfully.');
     }
 
     /**

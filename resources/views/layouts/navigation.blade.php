@@ -14,9 +14,15 @@
     <div class="mt-6 mb-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
         System Management
     </div>
-    <a href="{{ route('admin.reports') }}" class="{{ request()->routeIs('admin.reports*') ? $activeClass : $navClass }}">
+    <a href="{{ route('admin.reports') }}"
+        class="{{ request()->routeIs('admin.reports*') && !request()->routeIs('admin.reports.therapists') ? $activeClass : $navClass }}">
         <span class="material-symbols-outlined text-[20px]">payments</span>
         <span class="text-sm font-medium">Financial Reports</span>
+    </a>
+    <a href="{{ route('admin.reports.therapists') }}"
+        class="{{ request()->routeIs('admin.reports.therapists') ? $activeClass : $navClass }}">
+        <span class="material-symbols-outlined text-[20px]">spa</span>
+        <span class="text-sm font-medium">Therapist Reports</span>
     </a>
     <a href="{{ route('reports.daily') }}" class="{{ request()->routeIs('reports.daily*') ? $activeClass : $navClass }}">
         <span class="material-symbols-outlined text-[20px]">account_balance</span>
@@ -93,6 +99,11 @@
         class="{{ request()->routeIs('manager.analytics*') ? $activeClass : $navClass }}">
         <span class="material-symbols-outlined text-[20px]">insights</span>
         <span class="text-sm font-medium">Analytics</span>
+    </a>
+    <a href="{{ route('manager.reports.therapists') }}"
+        class="{{ request()->routeIs('manager.reports.therapists') ? $activeClass : $navClass }}">
+        <span class="material-symbols-outlined text-[20px]">spa</span>
+        <span class="text-sm font-medium">Therapist Reports</span>
     </a>
     <a href="{{ route('reports.daily') }}" class="{{ request()->routeIs('reports.daily*') ? $activeClass : $navClass }}">
         <span class="material-symbols-outlined text-[20px]">account_balance</span>

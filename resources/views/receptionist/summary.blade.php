@@ -9,6 +9,20 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
             <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                @if(session('rejection_reason'))
+                    <div class="md:col-span-3 lg:col-span-6 bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <span class="material-symbols-outlined text-red-500">warning</span>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-red-700">
+                                    <strong>Previous Report Rejected:</strong> {{ session('rejection_reason') }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
                 <!-- Summary Cards -->
                 <div
                     class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow sm:p-6 border border-gray-200 dark:border-gray-700">
@@ -102,6 +116,9 @@
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Time</th>
+                                <th
+                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -138,6 +155,29 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                         {{ $log->created_at->format('H:i') }}
                                     </td>
+                                    <td
+                                        class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end gap-3 items-center">
+                                        <a href="{{ route('receptionist.logs.edit', $log) }}"
+                                            class="text-indigo-600 hover:text-indigo-900 font-bold text-xs uppercase tracking-wide">
+                                            Edit
+                                        </a>
+
+                                        <form method="POST" action="{{ route('receptionist.logs.destroy', $log) }}"
+                                            id="delete-log-{{ $log->id }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="button" @click="$dispatch('open-confirmation', { 
+                                                            title: 'Delete Entry?', 
+                                                            message: 'Are you sure you want to remove this entry? This cannot be undone.', 
+                                                            type: 'danger', 
+                                                            confirmText: 'Yes, Delete', 
+                                                            formId: 'delete-log-{{ $log->id }}' 
+                                                        })"
+                                                class="text-red-600 hover:text-red-900 font-bold text-xs uppercase tracking-wide">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -147,10 +187,15 @@
 
             <!-- Finalize Action -->
             <div class="flex justify-end">
-                <form method="POST" action="{{ route('receptionist.finalize') }}"
-                    onsubmit="return confirm('Are you sure you want to finalize this shift? This will submit the report and you cannot edit entries afterwards.');">
+                <form method="POST" action="{{ route('receptionist.finalize') }}" id="finalize-shift-form">
                     @csrf
-                    <x-primary-button class="bg-red-600 hover:bg-red-500 text-lg py-3 px-6">
+                    <x-primary-button type="button" @click="$dispatch('open-confirmation', { 
+                            title: 'Finalize Shift?', 
+                            message: 'This will submit the report for review. You cannot edit entries afterwards.', 
+                            type: 'info', 
+                            confirmText: 'Submit Report', 
+                            formId: 'finalize-shift-form' 
+                        })" class="bg-red-600 hover:bg-red-500 text-lg py-3 px-6">
                         {{ __('Finalize Shift & Submit Report') }}
                     </x-primary-button>
                 </form>

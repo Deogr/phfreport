@@ -68,4 +68,13 @@ class User extends Authenticatable
     {
         return $this->hasMany(Ticket::class, 'assigned_to');
     }
+    public function assignments()
+    {
+        return $this->hasMany(ClientAssignment::class, 'therapist_id');
+    }
+
+    public function isTherapist()
+    {
+        return $this->role === 'therapist'; // Assuming 'role' column stores string 'therapist'
+    }
 }

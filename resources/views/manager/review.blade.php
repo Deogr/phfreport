@@ -46,6 +46,35 @@
                                     </div>
                                 </div>
 
+                                <!-- Therapist Cross-Reference -->
+                                <div class="mt-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-lg">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <h4 class="text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-widest">Therapist Cross-Reference</h4>
+                                        <div class="text-xs text-indigo-600 dark:text-indigo-400">
+                                            {{ $report->therapist_count }} Completed Sessions
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                                            Reported by Therapists ({{ $report->start_time->format('H:i') }} - {{ $report->end_time ? $report->end_time->format('H:i') : 'Now' }})
+                                        </div>
+                                        <div class="text-lg font-bold {{ $report->therapist_revenue > $report->total_revenue ? 'text-orange-600' : 'text-indigo-700 dark:text-indigo-300' }}">
+                                            {{ number_format($report->therapist_revenue) }} RWF
+                                        </div>
+                                    </div>
+                                    @if($report->therapist_revenue != $report->total_revenue)
+                                        <div class="mt-2 text-xs text-orange-600 dark:text-orange-400 font-medium flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[14px]">warning</span>
+                                            Discrepancy: {{ number_format(abs($report->total_revenue - $report->therapist_revenue)) }} RWF difference from reception.
+                                        </div>
+                                    @else
+                                        <div class="mt-2 text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[14px]">check_circle</span>
+                                            Match: Reception and Therapist totals align.
+                                        </div>
+                                    @endif
+                                </div>
+
                                 <!-- Detailed Log Breakdown -->
                                 <div class="mt-6">
                                     <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Itemized Entries
@@ -103,9 +132,18 @@
                                 <div class="mt-6 flex justify-end gap-3 border-t border-gray-100 dark:border-gray-700 pt-4">
                                     <!-- Approve Form -->
                                     <form method="POST"
-                                        action="{{ route(auth()->user()->role === 'admin' ? 'admin.reports.approve' : 'manager.reports.approve', $report) }}">
+                                        action="{{ route(auth()->user()->role === 'admin' ? 'admin.reports.approve' : 'manager.reports.approve', $report) }}"
+                                        id="approve-report-{{ $report->id }}">
                                         @csrf
-                                        <x-primary-button class="bg-green-600 hover:bg-green-500">
+                                        <x-primary-button type="button"
+                                            @click="$dispatch('open-confirmation', { 
+                                                title: 'Approve Report?', 
+                                                message: 'This will officially close the shift and record the revenue. Continue?', 
+                                                type: 'info', 
+                                                confirmText: 'Yes, Approve', 
+                                                formId: 'approve-report-{{ $report->id }}' 
+                                            })" 
+                                            class="bg-green-600 hover:bg-green-500">
                                             {{ __('Approve') }}
                                         </x-primary-button>
                                     </form>

@@ -160,7 +160,20 @@ class ManagerController extends Controller
         $reports = ShiftReport::where('status', 'submitted')
             ->with(['receptionist', 'station', 'attendanceLogs.service'])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->get()
+            ->map(function ($report) {
+                // Calculate therapist revenue for this shift's duration
+                $report->therapist_revenue = \App\Models\ClientAssignment::where('status', 'completed')
+                    ->whereBetween('appointment_time', [$report->start_time, $report->end_time ?? now()])
+                    ->sum('final_cost');
+
+                // Calculate count of completed massages
+                $report->therapist_count = \App\Models\ClientAssignment::where('status', 'completed')
+                    ->whereBetween('appointment_time', [$report->start_time, $report->end_time ?? now()])
+                    ->count();
+
+                return $report;
+            });
 
         $view = auth()->user()->role === 'admin' ? 'admin.reviews' : 'manager.review';
         return view($view, compact('reports'));

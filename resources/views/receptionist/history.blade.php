@@ -109,6 +109,23 @@
                                                             Reason: {{ $report->rejection_reason }}
                                                         </span>
                                                     @endif
+                                                    @if($report->status === 'rejected')
+                                                        <form method="POST"
+                                                            action="{{ route('receptionist.reports.reopen', $report) }}"
+                                                            class="mt-1" id="reopen-report-{{ $report->id }}">
+                                                            @csrf
+                                                            <button type="button" @click="$dispatch('open-confirmation', { 
+                                                                                title: 'Fix / Reopen Report?', 
+                                                                                message: 'This will move all entries back to your draft summary for editing. Continue?', 
+                                                                                type: 'warning', 
+                                                                                confirmText: 'Reopen Report', 
+                                                                                formId: 'reopen-report-{{ $report->id }}' 
+                                                                            })"
+                                                                class="px-2 py-0.5 rounded bg-red-100 text-red-700 hover:bg-red-200 text-[9px] font-bold uppercase tracking-wider cursor-pointer">
+                                                                Fix / Reopen
+                                                            </button>
+                                                        </form>
+                                                    @endif
                                                 </div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">

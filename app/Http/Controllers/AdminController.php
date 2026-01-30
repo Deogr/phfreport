@@ -344,7 +344,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'role' => 'required|in:admin,manager,receptionist',
+            'role' => 'required|in:admin,manager,receptionist,therapist',
             'password' => 'required|min:8|confirmed',
             'phone' => 'nullable|string|max:20'
         ]);
@@ -375,7 +375,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'role' => 'required|in:admin,manager,receptionist',
+            'role' => 'required|in:admin,manager,receptionist,therapist',
             'phone' => 'nullable|string|max:20',
             'status' => 'required|in:active,suspended,inactive'
         ]);

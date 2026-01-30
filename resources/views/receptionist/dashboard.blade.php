@@ -35,7 +35,7 @@
             <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-6">Quick Actions</h3>
             <div class="space-y-4">
                 <a href="{{ route('receptionist.entry') }}"
-                    class="group flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary dark:hover:border-primary transition-colors bg-gray-50 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-800">
+                    class="group flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary dark:hover:border-primary transition-all bg-gray-50 dark:bg-gray-800 hover:bg-white dark:hover:bg-gray-700 shadow-sm">
                     <div class="flex items-center gap-3">
                         <div class="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                             <span class="material-symbols-outlined">add_circle</span>
@@ -50,7 +50,7 @@
                 </a>
 
                 <a href="{{ route('receptionist.summary') }}"
-                    class="group flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary dark:hover:border-primary transition-colors bg-gray-50 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-800">
+                    class="group flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary dark:hover:border-primary transition-all bg-gray-50 dark:bg-gray-800 hover:bg-white dark:hover:bg-gray-700 shadow-sm">
                     <div class="flex items-center gap-3">
                         <div
                             class="size-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
@@ -59,6 +59,22 @@
                         <div>
                             <p class="font-semibold text-gray-900 dark:text-white">Shift Summary</p>
                             <p class="text-sm text-gray-500">View your current shift stats</p>
+                        </div>
+                    </div>
+                    <span
+                        class="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors">arrow_forward</span>
+                </a>
+
+                <a href="{{ route('receptionist.assignments') }}"
+                    class="group flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary dark:hover:border-primary transition-all bg-gray-50 dark:bg-gray-800 hover:bg-white dark:hover:bg-gray-700 shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="size-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400">
+                            <span class="material-symbols-outlined">assignment_ind</span>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-900 dark:text-white">Assign Staff</p>
+                            <p class="text-sm text-gray-500">Assign clients to therapists</p>
                         </div>
                     </div>
                     <span

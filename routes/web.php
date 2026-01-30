@@ -11,6 +11,7 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\TherapistReportController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -27,6 +28,8 @@ Route::get('/dashboard', function () {
         return (new AdminController)->index();
     } elseif ($role === 'manager') {
         return (new ManagerController)->index();
+    } elseif ($role === 'therapist') {
+        return (new \App\Http\Controllers\TherapistController)->index();
     } else {
         return (new ReceptionistController)->index();
     }
@@ -36,7 +39,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/reports', [AdminController::class, 'reports'])->name('admin.reports');
     Route::get('/admin/reports/export', [AdminController::class, 'exportReports'])->name('admin.reports.export');
     Route::get('/admin/analytics', [AnalyticsController::class, 'index'])->name('admin.analytics');
+    Route::get('/admin/analytics', [AnalyticsController::class, 'index'])->name('admin.analytics');
     Route::get('/admin/logs', [AdminController::class, 'logs'])->name('admin.logs');
+    Route::get('/admin/reports/therapists', [TherapistReportController::class, 'index'])->name('admin.reports.therapists');
 
     // User Management
     Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
@@ -96,7 +101,9 @@ Route::middleware(['auth', 'role:manager'])->group(function () {
     Route::post('/manager/assign-staff', [ManagerController::class, 'assignStaff'])->name('manager.assign.store');
     Route::put('/manager/assignments/{assignment}', [ManagerController::class, 'updateAssignment'])->name('manager.assign.update');
     Route::delete('/manager/assignments/{assignment}', [ManagerController::class, 'destroyAssignment'])->name('manager.assign.destroy');
+    Route::delete('/manager/assignments/{assignment}', [ManagerController::class, 'destroyAssignment'])->name('manager.assign.destroy');
     Route::get('/manager/analytics', [AnalyticsController::class, 'index'])->name('manager.analytics');
+    Route::get('/manager/reports/therapists', [TherapistReportController::class, 'index'])->name('manager.reports.therapists');
 });
 
 // Shared Admin & Manager Routes
@@ -127,6 +134,20 @@ Route::middleware(['auth', 'role:receptionist'])->group(function () {
     Route::get('/reception/history', [ReceptionistController::class, 'history'])->name('receptionist.history');
     Route::get('/reception/verify', [ReceptionistController::class, 'verifyCode'])->name('receptionist.verify');
     Route::post('/reception/finalize', [ReceptionistController::class, 'finalize'])->name('receptionist.finalize');
+    Route::post('/reception/reports/{report}/reopen', [ReceptionistController::class, 'reopen'])->name('receptionist.reports.reopen');
+    Route::delete('/reception/logs/{log}', [ReceptionistController::class, 'destroyLog'])->name('receptionist.logs.destroy');
+    Route::get('/reception/logs/{log}/edit', [ReceptionistController::class, 'editLog'])->name('receptionist.logs.edit');
+    Route::put('/reception/logs/{log}', [ReceptionistController::class, 'updateLog'])->name('receptionist.logs.update');
+
+    // Assignments
+    Route::get('/reception/assignments', [ReceptionistController::class, 'assignments'])->name('receptionist.assignments');
+    Route::get('/reception/assign', [ReceptionistController::class, 'showAssign'])->name('receptionist.assign');
+    Route::post('/reception/assign', [ReceptionistController::class, 'storeAssignment'])->name('receptionist.assign.store');
+});
+
+Route::middleware(['auth', 'role:therapist'])->group(function () {
+    Route::get('/therapist/dashboard', [App\Http\Controllers\TherapistController::class, 'index'])->name('therapist.dashboard');
+    Route::put('/therapist/assignments/{assignment}', [App\Http\Controllers\TherapistController::class, 'updateAssignment'])->name('therapist.assignments.update');
 });
 
 Route::middleware('auth')->group(function () {

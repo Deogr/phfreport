@@ -44,6 +44,13 @@ class DatabaseSeeder extends Seeder
             'role' => 'receptionist',
         ]);
 
+        User::create([
+            'name' => 'Lisa Therapist',
+            'email' => 'lisa@phf.com',
+            'password' => \Illuminate\Support\Facades\Hash::make('password'),
+            'role' => 'therapist',
+        ]);
+
         // Stations
         $mainStation = \App\Models\Station::create([
             'name' => 'Main Entrance',
