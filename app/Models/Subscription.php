@@ -11,6 +11,7 @@ class Subscription extends Model
         'guest_name',
         'guest_phone',
         'service_id',
+        'subscription_plan_id',
         'start_date',
         'end_date',
         'status',
@@ -32,8 +33,14 @@ class Subscription extends Model
         return $this->belongsTo(Service::class);
     }
 
+    public function subscriptionPlan()
+    {
+        return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan_id');
+    }
+
     public function attendanceLogs()
     {
+
         return $this->hasMany(AttendanceLog::class);
     }
 }

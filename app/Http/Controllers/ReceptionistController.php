@@ -47,14 +47,32 @@ class ReceptionistController extends Controller
     public function showEntry()
     {
         $activeAssignment = $this->getEffectiveAssignment();
-        $isGym = $activeAssignment && str_contains(strtolower($activeAssignment->station->name), 'gym');
-        $gymService = $isGym ? Service::where('name', 'like', '%Gym%')->first() : null;
+        $stationName = $activeAssignment ? strtolower($activeAssignment->station->name) : '';
+        $isGym = str_contains($stationName, 'gym');
+        $isSaunaOrMassage = str_contains($stationName, 'sauna') || str_contains($stationName, 'massage');
+
+        $gymService = $isGym ? Service::where('name', 'like', '%Gym%')->where('status', 'active')->first() : null;
+        $saunaService = $isSaunaOrMassage ? Service::where('name', 'like', '%Sauna Only%')->where('status', 'active')->first() : null;
+        $massageService = $isSaunaOrMassage ? Service::where('name', 'like', '%Massage%')->whereNotNull('id')->where('status', 'active')->get()->filter(fn($s) => stripos($s->name, 'sauna') === false)->first() : null;
+        $saunaMassageService = $isSaunaOrMassage ? Service::where('status', 'active')->get()->filter(fn($s) => stripos($s->name, 'sauna') !== false && stripos($s->name, 'massage') !== false)->first() : null;
+
+        // Build filtered services list (exclude gym services for non-gym stations)
+        $services = Service::where('status', 'active')
+            ->when(!$isGym && !$isSaunaOrMassage, fn($q) => $q->where('name', 'not like', '%Gym%')
+                ->where('name', 'not like', '%Personal Training%')
+                ->where('name', 'not like', '%Day Pass%')
+                ->where('name', 'not like', '%Monthly Membership%'))
+            ->get();
 
         return view('receptionist.entry', [
-            'services' => Service::where('status', 'active')->get(),
+            'services' => $services,
             'activeAssignment' => $activeAssignment,
             'isGym' => $isGym,
+            'isSaunaOrMassage' => $isSaunaOrMassage,
             'gymService' => $gymService,
+            'saunaService' => $saunaService,
+            'massageService' => $massageService,
+            'saunaMassageService' => $saunaMassageService,
             'stations' => $activeAssignment ? [$activeAssignment->station] : [],
             'recentEntries' => AttendanceLog::where('user_id', auth()->id())
                 ->whereDate('created_at', today())
@@ -73,11 +91,19 @@ class ReceptionistController extends Controller
             return redirect()->back()->with('error', 'You do not have an active assignment at this time.');
         }
 
-        $isGym = str_contains(strtolower($activeAssignment->station->name), 'gym');
+        $stationName = strtolower($activeAssignment->station->name);
+        $isGym = str_contains($stationName, 'gym');
+        $isSaunaOrMassage = str_contains($stationName, 'sauna') || str_contains($stationName, 'massage');
 
         if ($isGym) {
             $gymService = Service::where('name', 'like', '%Gym%')->first();
             $request->merge(['service_id' => $gymService?->id]);
+        }
+
+        if ($isSaunaOrMassage) {
+            // Service is chosen by the user from sauna/massage/combo options
+            // The service_id is posted from the hidden input in the form — no override needed
+            // Just ensure station doesn't have Gym service forced
         }
 
         $validated = $request->validate([
@@ -86,7 +112,7 @@ class ReceptionistController extends Controller
             'user_count' => 'required|integer|min:1|max:100',
             'payment_method' => 'required|in:Cash,Mobile,Signature,Ticket,Subscription',
             'amount' => 'required_if:payment_method,Cash,Mobile|nullable|numeric|min:0',
-            'subscription_id' => 'required_if:payment_method,Signature,Subscription|nullable|exists:subscriptions,id',
+            'subscription_id' => 'required_if:payment_method,Subscription|nullable|exists:subscriptions,id',
             'ticket_item_id' => 'required_if:payment_method,Ticket|nullable|exists:ticket_items,id',
         ], [
             'station_id.in' => 'You can only record entries for your assigned station: ' . $activeAssignment->station->name
@@ -356,15 +382,24 @@ class ReceptionistController extends Controller
         }
 
         $activeAssignment = $this->getEffectiveAssignment();
-        $isGym = $activeAssignment && str_contains(strtolower($activeAssignment->station->name), 'gym');
-        $gymService = $isGym ? Service::where('name', 'like', '%Gym%')->first() : null;
+        $stationName = $activeAssignment ? strtolower($activeAssignment->station->name) : '';
+        $isGym = str_contains($stationName, 'gym');
+        $isSaunaOrMassage = str_contains($stationName, 'sauna') || str_contains($stationName, 'massage');
+        $gymService = $isGym ? Service::where('name', 'like', '%Gym%')->where('status', 'active')->first() : null;
+        $saunaService = $isSaunaOrMassage ? Service::where('name', 'like', '%Sauna Only%')->where('status', 'active')->first() : null;
+        $massageService = $isSaunaOrMassage ? Service::where('status', 'active')->get()->filter(fn($s) => stripos($s->name, 'massage') !== false && stripos($s->name, 'sauna') === false)->first() : null;
+        $saunaMassageService = $isSaunaOrMassage ? Service::where('status', 'active')->get()->filter(fn($s) => stripos($s->name, 'sauna') !== false && stripos($s->name, 'massage') !== false)->first() : null;
 
         return view('receptionist.edit-log', [
             'log' => $log,
             'services' => Service::where('status', 'active')->get(),
             'activeAssignment' => $activeAssignment,
             'isGym' => $isGym,
-            'gymService' => $gymService
+            'isSaunaOrMassage' => $isSaunaOrMassage,
+            'gymService' => $gymService,
+            'saunaService' => $saunaService,
+            'massageService' => $massageService,
+            'saunaMassageService' => $saunaMassageService,
         ]);
     }
 

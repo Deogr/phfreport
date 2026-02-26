@@ -14,7 +14,9 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\TherapistReportController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return auth()->check()
+        ? redirect()->route('dashboard')
+        : redirect()->route('login');
 });
 
 Route::get('/offline', function () {
@@ -69,6 +71,13 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::put('/admin/services/{service}', [ServiceController::class, 'update'])->name('admin.services.update');
     Route::delete('/admin/services/{service}', [ServiceController::class, 'destroy'])->name('admin.services.destroy');
     Route::post('/admin/services/{service}/toggle-status', [ServiceController::class, 'toggleStatus'])->name('admin.services.toggle-status');
+
+    // Subscription Plans Management
+    Route::get('/admin/subscription-plans', [\App\Http\Controllers\SubscriptionPlanController::class, 'index'])->name('admin.subscription_plans.index');
+    Route::post('/admin/subscription-plans', [\App\Http\Controllers\SubscriptionPlanController::class, 'store'])->name('admin.subscription_plans.store');
+    Route::put('/admin/subscription-plans/{subscriptionPlan}', [\App\Http\Controllers\SubscriptionPlanController::class, 'update'])->name('admin.subscription_plans.update');
+    Route::delete('/admin/subscription-plans/{subscriptionPlan}', [\App\Http\Controllers\SubscriptionPlanController::class, 'destroy'])->name('admin.subscription_plans.destroy');
+    Route::post('/admin/subscription-plans/{subscriptionPlan}/toggle-status', [\App\Http\Controllers\SubscriptionPlanController::class, 'toggleStatus'])->name('admin.subscription_plans.toggle-status');
 
     // Assignment Management (Shared logic)
     Route::get('/admin/assignments', [ManagerController::class, 'showAssign'])->name('admin.assignments');

@@ -12,16 +12,16 @@ class SubscriptionController extends Controller
 {
     public function index()
     {
-        $subscriptions = Subscription::with(['user', 'service', 'attendanceLogs'])->latest()->get();
+        $subscriptions = Subscription::with(['user', 'subscriptionPlan', 'attendanceLogs'])->latest()->get();
         $totalSubscriptions = $subscriptions->count();
         $activeSubscriptions = $subscriptions->where('status', 'active')->count();
         $expiredSubscriptions = $subscriptions->where('status', 'expired')->count();
 
         $users = User::all(); // For creating new subscription
-        $services = Service::where('status', 'active')->get();
+        $plans = \App\Models\SubscriptionPlan::where('status', 'active')->get();
 
         $viewFolder = auth()->user()->role === 'admin' ? 'admin' : 'manager';
-        return view("{$viewFolder}.subscriptions.index", compact('subscriptions', 'users', 'services', 'totalSubscriptions', 'activeSubscriptions', 'expiredSubscriptions'));
+        return view("{$viewFolder}.subscriptions.index", compact('subscriptions', 'users', 'plans', 'totalSubscriptions', 'activeSubscriptions', 'expiredSubscriptions'));
     }
 
     public function store(Request $request)
@@ -29,7 +29,7 @@ class SubscriptionController extends Controller
         $validated = $request->validate([
             'guest_name' => 'required|string|max:255',
             'guest_phone' => 'nullable|string|max:20',
-            'service_id' => 'required|exists:services,id',
+            'subscription_plan_id' => 'required|exists:subscription_plans,id',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'price' => 'required|numeric|min:0',
@@ -56,7 +56,7 @@ class SubscriptionController extends Controller
         $validated = $request->validate([
             'guest_name' => 'required|string|max:255',
             'guest_phone' => 'nullable|string|max:20',
-            'service_id' => 'required|exists:services,id',
+            'subscription_plan_id' => 'required|exists:subscription_plans,id',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'price' => 'required|numeric|min:0',
@@ -94,7 +94,7 @@ class SubscriptionController extends Controller
 
     public function export()
     {
-        $subscriptions = Subscription::with(['user', 'service'])->latest()->get();
+        $subscriptions = Subscription::with(['user', 'subscriptionPlan'])->latest()->get();
         $filename = "subscriptions_export_" . date('Y-m-d_H-i-s') . ".csv";
 
         $handle = fopen('php://output', 'w');
@@ -105,7 +105,7 @@ class SubscriptionController extends Controller
         ];
 
         return response()->stream(function () use ($handle, $subscriptions) {
-            fputcsv($handle, ['ID', 'Client Name', 'Client Phone', 'Service', 'Start Date', 'End Date', 'Price', 'Status']);
+            fputcsv($handle, ['ID', 'Client Name', 'Client Phone', 'Plan', 'Start Date', 'End Date', 'Price', 'Status']);
 
             foreach ($subscriptions as $sub) {
                 /** @var \App\Models\Subscription $sub */
@@ -114,7 +114,7 @@ class SubscriptionController extends Controller
                     $sub->id,
                     $name,
                     $sub->guest_phone ?? 'N/A',
-                    $sub->service->name,
+                    $sub->subscriptionPlan ? $sub->subscriptionPlan->name : ($sub->service ? $sub->service->name : 'N/A'),
                     $sub->start_date->format('Y-m-d'),
                     $sub->end_date->format('Y-m-d'),
                     $sub->price,
@@ -127,7 +127,7 @@ class SubscriptionController extends Controller
 
     public function print()
     {
-        $subscriptions = Subscription::with(['user', 'service'])->latest()->get();
+        $subscriptions = Subscription::with(['user', 'subscriptionPlan'])->latest()->get();
         $viewFolder = auth()->user()->role === 'admin' ? 'admin' : 'manager';
         return view("{$viewFolder}.subscriptions.print", compact('subscriptions'));
     }

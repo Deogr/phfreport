@@ -47,33 +47,35 @@
                                 </div>
 
                                 <!-- Therapist Cross-Reference -->
-                                <div class="mt-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-lg">
-                                    <div class="flex justify-between items-center mb-2">
-                                        <h4 class="text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-widest">Therapist Cross-Reference</h4>
-                                        <div class="text-xs text-indigo-600 dark:text-indigo-400">
-                                            {{ $report->therapist_count }} Completed Sessions
+                                @unless(str_contains(strtolower($report->station->name), 'gym'))
+                                    <div class="mt-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-lg">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <h4 class="text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-widest">Therapist Cross-Reference</h4>
+                                            <div class="text-xs text-indigo-600 dark:text-indigo-400">
+                                                {{ $report->therapist_count }} Completed Sessions
+                                            </div>
                                         </div>
+                                        <div class="flex justify-between items-center">
+                                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                Reported by Therapists ({{ $report->start_time->format('H:i') }} - {{ $report->end_time ? $report->end_time->format('H:i') : 'Now' }})
+                                            </div>
+                                            <div class="text-lg font-bold {{ $report->therapist_revenue > $report->total_revenue ? 'text-orange-600' : 'text-indigo-700 dark:text-indigo-300' }}">
+                                                {{ number_format($report->therapist_revenue) }} RWF
+                                            </div>
+                                        </div>
+                                        @if($report->therapist_revenue != $report->total_revenue)
+                                            <div class="mt-2 text-xs text-orange-600 dark:text-orange-400 font-medium flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-[14px]">warning</span>
+                                                Discrepancy: {{ number_format(abs($report->total_revenue - $report->therapist_revenue)) }} RWF difference from reception.
+                                            </div>
+                                        @else
+                                            <div class="mt-2 text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-[14px]">check_circle</span>
+                                                Match: Reception and Therapist totals align.
+                                            </div>
+                                        @endif
                                     </div>
-                                    <div class="flex justify-between items-center">
-                                        <div class="text-sm text-gray-600 dark:text-gray-400">
-                                            Reported by Therapists ({{ $report->start_time->format('H:i') }} - {{ $report->end_time ? $report->end_time->format('H:i') : 'Now' }})
-                                        </div>
-                                        <div class="text-lg font-bold {{ $report->therapist_revenue > $report->total_revenue ? 'text-orange-600' : 'text-indigo-700 dark:text-indigo-300' }}">
-                                            {{ number_format($report->therapist_revenue) }} RWF
-                                        </div>
-                                    </div>
-                                    @if($report->therapist_revenue != $report->total_revenue)
-                                        <div class="mt-2 text-xs text-orange-600 dark:text-orange-400 font-medium flex items-center gap-1">
-                                            <span class="material-symbols-outlined text-[14px]">warning</span>
-                                            Discrepancy: {{ number_format(abs($report->total_revenue - $report->therapist_revenue)) }} RWF difference from reception.
-                                        </div>
-                                    @else
-                                        <div class="mt-2 text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
-                                            <span class="material-symbols-outlined text-[14px]">check_circle</span>
-                                            Match: Reception and Therapist totals align.
-                                        </div>
-                                    @endif
-                                </div>
+                                @endunless
 
                                 <!-- Detailed Log Breakdown -->
                                 <div class="mt-6">

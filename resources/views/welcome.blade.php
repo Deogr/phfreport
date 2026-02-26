@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>PHF Report - Integrated Healthcare Management</title>
+    <title>PHF MIS - Integrated Healthcare Management</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -303,7 +303,7 @@
             <div class="logo">
                 <img src="{{ asset('images/logo.jpg') }}" alt="PHF Report Logo"
                     style="height: 48px; width: auto; object-fit: contain;">
-                <span>PHF Report</span>
+                <span>PHF MIS</span>
             </div>
 
             <div class="nav-links">
@@ -387,7 +387,7 @@
     <footer
         style="padding: 40px 0; border-top: 1px solid #e2e8f0; text-align: center; color: var(--secondary); font-size: 0.875rem;">
         <div class="container">
-            <p>&copy; {{ date('Y') }} PHF Report. All rights reserved.</p>
+            <p>&copy; {{ date('Y') }} PHF MIS. All rights reserved.</p>
         </div>
     </footer>
 </body>

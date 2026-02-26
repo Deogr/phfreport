@@ -25,7 +25,7 @@
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="PHF Gym">
+    <meta name="apple-mobile-web-app-title" content="PHF MIS">
 
     <style>
         [x-cloak] {
@@ -56,7 +56,7 @@
                     <span class="material-symbols-outlined text-xl">fitness_center</span>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold tracking-tight text-[#111418] dark:text-white leading-none">PHF Systems
+                    <h1 class="text-lg font-bold tracking-tight text-[#111418] dark:text-white leading-none">PHF MIS
                     </h1>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         {{ Auth::user()->role_label ?? 'Dashboard' }}
@@ -148,7 +148,7 @@
                 <!-- Footer -->
                 <footer
                     class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-400">
-                    © {{ date('Y') }} PHF Gym Management Systems. All rights reserved.
+                    © {{ date('Y') }} PHF MIS. All rights reserved.
                 </footer>
             </div>
         </main>
@@ -199,7 +199,7 @@
         }
 
         window.addEventListener('appinstalled', (evt) => {
-            console.log('PHF Systems was installed.');
+            console.log('PHF MIS was installed.');
             if (installBtn) {
                 installBtn.style.display = 'none';
             }

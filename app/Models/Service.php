@@ -17,4 +17,9 @@ class Service extends Model
     {
         return $this->hasMany(Subscription::class);
     }
+
+    public function subscriptionPlans()
+    {
+        return $this->belongsToMany(SubscriptionPlan::class);
+    }
 }

@@ -7,7 +7,7 @@
                 <div class="flex items-center justify-center">
                     <img src="{{ asset('images/logo.jpg') }}" alt="PHF Report Logo" class="h-12 w-auto object-contain">
                 </div>
-                <h2 class="text-2xl font-bold tracking-tight text-[#111418] dark:text-white">PHF Systems</h2>
+                <h2 class="text-2xl font-bold tracking-tight text-[#111418] dark:text-white">PHF MIS</h2>
             </div>
             <h1 class="mt-8 text-center text-xl font-bold leading-tight tracking-tight text-[#111418] dark:text-white">
                 Log in
@@ -79,7 +79,7 @@
     <!-- Footer -->
     <div class="mt-8 flex flex-col items-center justify-center gap-4">
         <p class="text-xs text-[#617589] dark:text-gray-500">
-            © 2024 PHF Systems. All rights reserved.
+            © 2024 PHF MIS. All rights reserved.
         </p>
         <div class="flex items-center gap-4 text-xs text-[#617589] dark:text-gray-500">
             <a class="hover:text-[#111418] dark:hover:text-gray-300" href="#">Privacy Policy</a>

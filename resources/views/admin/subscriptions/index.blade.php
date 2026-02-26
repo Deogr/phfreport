@@ -5,32 +5,11 @@
         </h2>
     </x-slot>
 
-    <div class="py-12" x-data="{ 
-        showCreateModal: false,
-        showEditModal: false,
-        currentSubscription: null,
-        editUrl: '',
-        editName: '',
-        editPhone: '',
-        editServiceId: '',
-        editStartDate: '',
-        editEndDate: '',
-        editPrice: '',
-        editStatus: '',
+    <script>
+        var adminSubscriptionPlans = {!! json_encode($plans) !!};
+    </script>
 
-        openEdit(sub) {
-            this.currentSubscription = sub;
-            this.editName = sub.user ? sub.user.name : sub.guest_name;
-            this.editPhone = sub.guest_phone || '';
-            this.editServiceId = sub.service_id;
-            this.editStartDate = sub.start_date.split('T')[0];
-            this.editEndDate = sub.end_date.split('T')[0];
-            this.editPrice = sub.price;
-            this.editStatus = sub.status;
-            this.editUrl = '{{ route('admin.subscriptions.update', ':id') }}'.replace(':id', sub.id);
-            this.showEditModal = true;
-        }
-    }">
+    <div class="py-12" x-data="adminSubscriptionsApp()">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
             <!-- Actions -->
@@ -85,7 +64,7 @@
                                         User</th>
                                     <th
                                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                        Service</th>
+                                        Plan</th>
                                     <th
                                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Dates</th>
@@ -114,7 +93,7 @@
                                             @endif
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                                            {{ $sub->service->name }}
+                                            {{ $sub->subscriptionPlan ? $sub->subscriptionPlan->name : ($sub->service ? $sub->service->name : 'Legacy') }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                                             {{ $sub->start_date->format('M d, Y') }} -
@@ -140,10 +119,11 @@
                                             {{ number_format($sub->price) }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                                                @if($sub->status === 'active') bg-green-100 text-green-800 
-                                                                                @elseif($sub->status === 'expired') bg-gray-100 text-gray-800 
-                                                                                @else bg-red-100 text-red-800 @endif">
+                                            <span
+                                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                                                                @if($sub->status === 'active') bg-green-100 text-green-800 
+                                                                                                @elseif($sub->status === 'expired') bg-gray-100 text-gray-800 
+                                                                                                @else bg-red-100 text-red-800 @endif">
                                                 {{ ucfirst($sub->status) }}
                                             </span>
                                         </td>
@@ -157,7 +137,8 @@
                                                     @method('PUT')
                                                     <input type="hidden" name="guest_name"
                                                         value="{{ $sub->user ? $sub->user->name : $sub->guest_name }}">
-                                                    <input type="hidden" name="service_id" value="{{ $sub->service_id }}">
+                                                    <input type="hidden" name="subscription_plan_id"
+                                                        value="{{ $sub->subscription_plan_id }}">
                                                     <input type="hidden" name="start_date"
                                                         value="{{ $sub->start_date->format('Y-m-d') }}">
                                                     <input type="hidden" name="end_date"
@@ -207,58 +188,78 @@
                             <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="modal-title">
                                 Create New Subscription
                             </h3>
-                            <div class="mt-2 space-y-4">
+                            <div class="mt-4 space-y-4" x-data="createPlanApp()">
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Client
                                             Name</label>
                                         <input type="text" name="guest_name"
-                                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary focus:ring focus:ring-primary/20"
                                             required placeholder="Enter name">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone
                                             (Optional)</label>
                                         <input type="text" name="guest_phone"
-                                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary focus:ring focus:ring-primary/20"
                                             placeholder="Enter phone">
                                     </div>
                                 </div>
+
                                 <div>
                                     <label
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Service</label>
-                                    <select name="service_id"
-                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                        required>
-                                        @foreach($services as $service)
-                                            <option value="{{ $service->id }}">{{ $service->name }} -
-                                                {{ number_format($service->price) }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Service
+                                        Plan</label>
+                                    <div class="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-1">
+                                        <template x-for="plan in plans" :key="plan.id">
+                                            <label
+                                                class="flex items-center justify-between gap-3 px-4 py-3 rounded-lg border cursor-pointer transition-all"
+                                                :class="selectedPlan === plan.id
+                                                    ? 'border-primary bg-primary/5 dark:bg-primary/10'
+                                                    : 'border-gray-200 dark:border-gray-600 hover:border-primary/50'">
+                                                <div class="flex items-center gap-3">
+                                                    <input type="radio" name="subscription_plan_id" :value="plan.id"
+                                                        class="accent-primary" @change="selectPlan(plan)" required>
+                                                    <div>
+                                                        <p class="text-sm font-semibold text-gray-800 dark:text-white"
+                                                            x-text="plan.name"></p>
+                                                        <p class="text-xs text-gray-500 dark:text-gray-400"
+                                                            x-text="plan.duration_days + ' Days Access'"></p>
+                                                    </div>
+                                                </div>
+                                                <span class="text-sm font-bold text-primary whitespace-nowrap"
+                                                    x-text="Number(plan.price).toLocaleString() + ' RWF'"></span>
+                                            </label>
+                                        </template>
+                                    </div>
                                 </div>
+
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start
                                             Date</label>
-                                        <input type="date" name="start_date"
-                                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                        <input type="date" name="start_date" x-model="startDate"
+                                            @change="updateEndDate()"
+                                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary focus:ring focus:ring-primary/20"
                                             required>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">End
                                             Date</label>
-                                        <input type="date" name="end_date"
-                                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                        <input type="date" name="end_date" x-model="endDate"
+                                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary focus:ring focus:ring-primary/20"
                                             required>
                                     </div>
                                 </div>
+
                                 <div>
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Price</label>
-                                    <input type="number" name="price" step="0.01"
-                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                        required>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Price
+                                        (RWF)</label>
+                                    <input type="number" name="price" x-model="createPrice"
+                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary focus:ring focus:ring-primary/20"
+                                        placeholder="Auto-filled from plan" required>
+                                    <p class="text-xs text-gray-400 mt-1">Auto-filled from selected plan. Edit if
+                                        needed.</p>
                                 </div>
                             </div>
                         </div>
@@ -311,13 +312,16 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Service</label>
-                                    <select name="service_id" x-model="editServiceId"
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Service
+                                        Plan</label>
+                                    <select name="subscription_plan_id" x-model="editPlanId"
+                                        @change="onEditPlanChange()"
                                         class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:ring-primary focus:border-primary"
                                         required>
-                                        @foreach($services as $service)
-                                            <option value="{{ $service->id }}">{{ $service->name }}</option>
+                                        @foreach($plans as $plan)
+                                            <option value="{{ $plan->id }}">{{ $plan->name }} —
+                                                {{ number_format($plan->price) }} RWF
+                                            </option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -373,4 +377,83 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+        <script>
+            function adminSubscriptionsApp() {
+                return {
+                    showCreateModal: false,
+                    showEditModal: false,
+                    currentSubscription: null,
+                    editUrl: '',
+                    editName: '',
+                    editPhone: '',
+                    editPlanId: '',
+                    editStartDate: '',
+                    editEndDate: '',
+                    editPrice: '',
+                    editStatus: '',
+
+                    openEdit: function (sub) {
+                        this.currentSubscription = sub;
+                        this.editName = sub.user ? sub.user.name : sub.guest_name;
+                        this.editPhone = sub.guest_phone || '';
+                        this.editPlanId = sub.subscription_plan_id ? String(sub.subscription_plan_id) : (sub.service_id ? String(sub.service_id) : '');
+                        this.editStartDate = sub.start_date.split('T')[0];
+                        this.editEndDate = sub.end_date.split('T')[0];
+                        this.editPrice = sub.price;
+                        this.editStatus = sub.status;
+                        this.editUrl = '{{ route('admin.subscriptions.update', ':id') }}'.replace(':id', sub.id);
+                        this.showEditModal = true;
+                    },
+
+                    onEditPlanChange: function () {
+                        var id = this.editPlanId;
+                        var plans = adminSubscriptionPlans;
+                        for (var i = 0; i < plans.length; i++) {
+                            if (String(plans[i].id) === String(id)) {
+                                this.editPrice = plans[i].price;
+                                // Recalculate end date based on new plan duration if start date is set
+                                if (this.editStartDate) {
+                                    let date = new Date(this.editStartDate);
+                                    date.setDate(date.getDate() + parseInt(plans[i].duration_days));
+                                    this.editEndDate = date.toISOString().split('T')[0];
+                                }
+                                break;
+                            }
+                        }
+                    }
+                };
+            }
+
+            function createPlanApp() {
+                return {
+                    selectedPlan: null,
+                    createPrice: '',
+                    startDate: '{{ date('Y-m-d') }}',
+                    endDate: '',
+                    plans: adminSubscriptionPlans,
+                    selectPlan: function (plan) {
+                        this.selectedPlan = plan.id;
+                        this.createPrice = plan.price;
+                        if (this.startDate && plan.duration_days) {
+                            let date = new Date(this.startDate);
+                            date.setDate(date.getDate() + parseInt(plan.duration_days));
+                            this.endDate = date.toISOString().split('T')[0];
+                        }
+                    },
+                    updateEndDate: function () {
+                        if (this.selectedPlan && this.startDate) {
+                            let plan = this.plans.find(p => p.id === this.selectedPlan);
+                            if (plan) {
+                                let date = new Date(this.startDate);
+                                date.setDate(date.getDate() + parseInt(plan.duration_days));
+                                this.endDate = date.toISOString().split('T')[0];
+                            }
+                        }
+                    }
+                };
+            }
+        </script>
+    @endpush
 </x-app-layout>

@@ -57,6 +57,11 @@
         <span class="material-symbols-outlined text-[20px]">spa</span>
         <span class="text-sm font-medium">Services</span>
     </a>
+    <a href="{{ route('admin.subscription_plans.index') }}"
+        class="{{ request()->routeIs('admin.subscription_plans*') ? $activeClass : $navClass }}">
+        <span class="material-symbols-outlined text-[20px]">event_repeat</span>
+        <span class="text-sm font-medium">Subscription Plans</span>
+    </a>
     <a href="{{ route('admin.assignments') }}"
         class="{{ request()->routeIs('admin.assignments*') ? $activeClass : $navClass }}">
         <span class="material-symbols-outlined text-[20px]">calendar_month</span>
@@ -65,7 +70,7 @@
     <a href="{{ route('admin.subscriptions.index') }}"
         class="{{ request()->routeIs('admin.subscriptions*') ? $activeClass : $navClass }}">
         <span class="material-symbols-outlined text-[20px]">card_membership</span>
-        <span class="text-sm font-medium">Subscriptions</span>
+        <span class="text-sm font-medium">Subscription Plans</span>
     </a>
     <a href="{{ route('admin.tickets') }}" class="{{ request()->routeIs('admin.tickets*') ? $activeClass : $navClass }}">
         <span class="material-symbols-outlined text-[20px]">confirmation_number</span>
@@ -88,7 +93,7 @@
     <a href="{{ route('manager.subscriptions.index') }}"
         class="{{ request()->routeIs('manager.subscriptions*') ? $activeClass : $navClass }}">
         <span class="material-symbols-outlined text-[20px]">card_membership</span>
-        <span class="text-sm font-medium">Subscriptions</span>
+        <span class="text-sm font-medium">Subscription Plans</span>
     </a>
     <a href="{{ route('manager.tickets') }}"
         class="{{ request()->routeIs('manager.tickets*') ? $activeClass : $navClass }}">
