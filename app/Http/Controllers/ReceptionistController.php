@@ -32,7 +32,7 @@ class ReceptionistController extends Controller
                 return [
                     'time' => $log->created_at->format('h:i A'),
                     'customer' => $log->user_count > 1 ? $log->user_count . ' Guests' : 'Guest',
-                    'service' => $log->service->name,
+                    'service' => $log->service?->name ?? 'Unknown',
                     'revenue' => 'RWF ' . number_format($log->amount),
                     'status' => $log->status === 'draft' ? 'Pending' : 'Submitted'
                 ];
@@ -154,7 +154,7 @@ class ReceptionistController extends Controller
 
         if ($type === 'subscription') {
             // In this system, subscription ID is used as the "code" for now or we could use phone
-            $sub = Subscription::with('service')
+            $sub = Subscription::with(['service', 'subscriptionPlan'])
                 ->where(function ($q) use ($code) {
                     $q->where('id', $code)
                         ->orWhere('guest_phone', $code);
@@ -164,12 +164,13 @@ class ReceptionistController extends Controller
                 ->first();
 
             if ($sub) {
+                $planName = $sub->subscriptionPlan ? $sub->subscriptionPlan->name : ($sub->service ? $sub->service->name : 'Unknown Plan');
                 return response()->json([
                     'success' => true,
                     'type' => 'subscription',
                     'id' => $sub->id,
                     'name' => $sub->guest_name,
-                    'service' => $sub->service->name,
+                    'service' => $planName,
                     'service_id' => $sub->service_id,
                     'price' => $sub->price,
                     'expires' => $sub->end_date->format('M d, Y')
@@ -233,10 +234,10 @@ class ReceptionistController extends Controller
                 'ticket_users' => $logs->where('payment_method', 'Ticket')->sum('user_count'),
                 'total_users' => $logs->sum('user_count'),
                 'total_revenue' => $logs->whereIn('payment_method', ['Cash', 'Mobile'])->sum('amount'),
-                'gym_count' => $logs->filter(fn($l) => str_contains(strtolower($l->service->name), 'gym'))->sum('user_count'),
-                'sauna_count' => $logs->filter(fn($l) => str_contains(strtolower($l->service->name), 'sauna') && !str_contains(strtolower($l->service->name), 'massage'))->sum('user_count'),
-                'massage_count' => $logs->filter(fn($l) => str_contains(strtolower($l->service->name), 'massage') && !str_contains(strtolower($l->service->name), 'sauna'))->sum('user_count'),
-                'combo_count' => $logs->filter(fn($l) => str_contains(strtolower($l->service->name), 'sauna') && str_contains(strtolower($l->service->name), 'massage'))->sum('user_count'),
+                'gym_count' => $logs->filter(fn($l) => str_contains(strtolower($l->service?->name ?? ''), 'gym'))->sum('user_count'),
+                'sauna_count' => $logs->filter(fn($l) => str_contains(strtolower($l->service?->name ?? ''), 'sauna') && !str_contains(strtolower($l->service?->name ?? ''), 'massage'))->sum('user_count'),
+                'massage_count' => $logs->filter(fn($l) => str_contains(strtolower($l->service?->name ?? ''), 'massage') && !str_contains(strtolower($l->service?->name ?? ''), 'sauna'))->sum('user_count'),
+                'combo_count' => $logs->filter(fn($l) => str_contains(strtolower($l->service?->name ?? ''), 'sauna') && str_contains(strtolower($l->service?->name ?? ''), 'massage'))->sum('user_count'),
             ]
         ]);
     }

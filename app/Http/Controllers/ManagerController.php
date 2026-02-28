@@ -91,15 +91,16 @@ class ManagerController extends Controller
                 ];
             });
 
-        $recentSubs = Subscription::with('service')
+        $recentSubs = Subscription::with(['service', 'subscriptionPlan'])
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get()
             ->map(function ($sub) {
+                $planName = $sub->subscriptionPlan ? $sub->subscriptionPlan->name : ($sub->service ? $sub->service->name : 'Unknown Plan');
                 return [
                     'type' => 'subscription',
                     'title' => 'Member Joined',
-                    'subtitle' => ($sub->guest_name ?? 'Client') . ' (' . $sub->service->name . ')',
+                    'subtitle' => ($sub->guest_name ?? 'Client') . ' (' . $planName . ')',
                     'amount' => 'RWF ' . number_format($sub->price),
                     'time' => $sub->created_at,
                     'icon' => 'card_membership',

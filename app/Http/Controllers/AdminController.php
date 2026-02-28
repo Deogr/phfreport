@@ -125,10 +125,11 @@ class AdminController extends Controller
             ->with('service')
             ->get()
             ->map(function ($log) use ($totalLogs) {
+                $serviceName = $log->service?->name ?? 'Unknown';
                 return [
-                    'name' => $log->service->name,
+                    'name' => $serviceName,
                     'value' => round(($log->total / $totalLogs) * 100),
-                    'color' => '#' . substr(md5($log->service->name), 0, 6)
+                    'color' => '#' . substr(md5($serviceName), 0, 6)
                 ];
             });
 
@@ -183,15 +184,16 @@ class AdminController extends Controller
                 ];
             });
 
-        $recentSubscriptions = Subscription::with('service')
+        $recentSubscriptions = Subscription::with(['service', 'subscriptionPlan'])
             ->orderBy('created_at', 'desc')
             ->take(10)
             ->get()
             ->map(function ($sub) {
+                $planName = $sub->subscriptionPlan ? $sub->subscriptionPlan->name : ($sub->service ? $sub->service->name : 'Unknown Plan');
                 return [
                     'type' => 'subscription',
                     'title' => 'New Subscription',
-                    'subtitle' => ($sub->guest_name ?? 'Client') . ' - ' . $sub->service->name,
+                    'subtitle' => ($sub->guest_name ?? 'Client') . ' - ' . $planName,
                     'amount' => 'RWF ' . number_format($sub->price),
                     'time' => $sub->created_at,
                     'icon' => 'card_membership',
@@ -560,8 +562,8 @@ class AdminController extends Controller
                 fputcsv($file, [
                     $log->created_at->format('Y-m-d H:i:s'),
                     $log->user->name,
-                    $log->service->name,
-                    $log->unit_price ?? $log->service->base_price,
+                    $log->service?->name ?? 'Unknown',
+                    $log->unit_price ?? $log->service?->base_price ?? 0,
                     $log->station->name,
                     $log->payment_method,
                     $log->user_count,
